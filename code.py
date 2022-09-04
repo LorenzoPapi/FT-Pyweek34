@@ -14,8 +14,6 @@ projectile2 = pygame.Rect(415, 450, 50, 50)
 projectile3 = pygame.Rect(415, 450, 50, 50)
 
 projectile_gravity = 7
-projectile_move = False
-projectile_list = []
 game_true = True
 
 while True:
