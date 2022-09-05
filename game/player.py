@@ -21,7 +21,7 @@ class Player(pygame.sprite.Sprite):
             pass    
         if (key == pygame.K_RIGHT):
             pass
-        if (key == pygame.K_SPACE and self.rect.y >= 450):
+        if (key == pygame.K_SPACE and self.rect.y >= 455):
             self.gravity_y = -7
             self.friction = 1
             self.jumpf = self.frames
@@ -29,7 +29,7 @@ class Player(pygame.sprite.Sprite):
     def update_player(self):
         self.window.blit(self.image, self.rect)
         self.rect.y += self.gravity_y * self.friction
-        self.rect.y = clamp(self.rect.y, 450, 0)
+        self.rect.y = clamp(self.rect.y, 455, 0)
         if (self.frames == (self.jumpf + 10)):
             self.gravity_y = 7
             self.friction = 0.5
