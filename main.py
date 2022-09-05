@@ -12,10 +12,10 @@ window = pygame.display.set_mode((900, 900))
 caption = pygame.display.set_caption('hello')
 clock = pygame.time.Clock()
 
-planet_img = pygame.image.load('assets/textures/red_planet.png').convert_alpha()
-planet_img = pygame.transform.rotozoom(planet_img, 0, 1.5)
+planet_img = pygame.image.load('assets/textures/red_planet_2.png').convert_alpha()
+planet_img = pygame.transform.rotozoom(planet_img, 0, 1.5).convert_alpha()
 projectile_img = pygame.image.load('assets/textures/projectile.png').convert_alpha()
-projectile_img = pygame.transform.rotozoom(projectile_img, 0, 2.5)
+projectile_img = pygame.transform.rotozoom(projectile_img, 0, 2.6)
 planet = planet_img.get_rect(center = (450, 1450))
 bullets = []
 game_true = True
