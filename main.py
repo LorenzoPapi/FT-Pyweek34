@@ -53,24 +53,26 @@ def event_handler():
 
 def generate_bullet(size=16):
     bullet = pygame.sprite.Sprite()
-    bullet.image = pygame.transform.rotozoom(pygame.image.load("assets/textures/projectile.png").convert_alpha(), 0, 2.5)
+    bullet.image = pygame.image.load("assets/textures/projectile.png").convert_alpha()
     bullet.orig_image = bullet.image
-    bullet.rect = bullet.image.get_rect(center=player.rect.center)
-    bullets.append({"sprite": bullet, "angle": 0, "start": bullet.rect.center})
+    bullets.append({"sprite": bullet, "angle": 0, "start": player.rect.midtop})
     return bullet
 
 while running:
     window.fill('Black')
     for obj in bullets:
         bullet = obj["sprite"]
-        window.blit(bullet.image, (bullet.rect.center))
         bullet.image = pygame.transform.rotozoom(bullet.orig_image, math.degrees(-obj["angle"]), 1)
-        bullet.rect = bullet.image.get_rect(center=(planet.center[0] + obj["start"][0] * math.sin(obj["angle"]), planet.center[1] - player.rect.centery - 50 - obj["start"][1] * math.cos(obj["angle"])))
-        obj["angle"] += 0.025
+        bullet.rect = bullet.image.get_rect(center=(planet.center[0] + obj["start"][0] * math.sin(obj["angle"]), planet.center[1] - obj["start"][1] * math.cos(obj["angle"])))
+        print(bullet.rect)
+        window.blit(bullet.image, bullet.rect)
+        pygame.draw.rect(window, (255, 64, 255), bullet.rect, 2)
+        obj["angle"] += 0.003
+        
         if (isOutsideSurface(window, bullet.rect.topleft)):
             bullets.remove(obj)
 
-    planet.update_planet()
+    #planet.update_planet()
     player.update_player()
 
     pygame.display.flip()

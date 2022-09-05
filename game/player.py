@@ -6,7 +6,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, window, planet):
         super().__init__()
         self.window = window
-        self.image = pygame.image.load(os.path.join("assets", "textures", "player.png")).convert_alpha()
+        self.image = pygame.image.load(os.path.join("assets", "textures", "player_2.png")).convert_alpha()
         self.ground_y = planet.rect.topleft[1] - self.image.get_size()[1]
         self.rect = self.image.get_rect(center=(self.window.get_width() / 2, self.ground_y))
         self.gravity_y = 7
@@ -26,6 +26,7 @@ class Player(pygame.sprite.Sprite):
 
     def update_player(self):
         self.window.blit(self.image, self.rect)
+        pygame.draw.rect(self.window, (255, 64, 255), self.rect, 2)
         self.rect.y += self.gravity_y * self.friction
         self.rect.y = clamp(self.rect.y, self.ground_y, 0)
         if (self.frames == (self.jumpf + 20)):
