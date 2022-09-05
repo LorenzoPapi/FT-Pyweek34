@@ -1,12 +1,15 @@
 import pygame
+import os
 
 def clamp(v, maxv, minv):
     return min(max(v, minv), maxv)
 
-
-class Player:
-    def __init__(self):
-        self.rect = pygame.Rect(415, 450, 50, 100)
+class Player(pygame.sprite.Sprite):
+    def __init__(self, window):
+        super().__init__()
+        self.window = window
+        self.image = pygame.image.load(os.path.join("assets", "textures", "player.png")).convert_alpha()
+        self.rect = self.image.get_rect(center=(self.window.get_width() / 2, 450))
         self.gravity_y = 0
         self.friction = 1
         self.frames = 0
@@ -24,6 +27,7 @@ class Player:
             self.jumpf = self.frames
 
     def update_player(self):
+        self.window.blit(self.image, self.rect)
         self.rect.y += self.gravity_y * self.friction
         self.rect.y = clamp(self.rect.y, 450, 0)
         if (self.frames == (self.jumpf + 10)):
