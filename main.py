@@ -4,27 +4,26 @@ from game.player import *
 from game.utils import *
 
 pygame.init()
-colors = {"RED": (255, 64, 64), "WHITE": (255, 255, 255)}
 
 class Planet(SuperSprite):
-    def __init__(self, window):
-        super().__init__(window, pygame.image.load('assets/textures/red_planet_2.png').convert_alpha())
-        self.size = self.image.get_size()
-        self.center = (self.window.get_width() / 2, self.window.get_height() + 300)
-        self.rect = pygame.rect.Rect((self.center[0]-self.size[0]/2, self.center[1]-self.size[1]/2), self.size)
+    def __init__(self):
+        super().__init__(pygame.image.load(asset_path("texture", "red_planet_2.png")))
+        self.radius = self.image.get_size()[0] / 2
+        self.center = (game_window.get_width() / 2, game_window.get_height() + self.radius / 2 + 50)
+        self.rect = pygame.rect.Rect(self.center[0] - self.radius, self.center[1] - self.radius, self.radius * 2, self.radius * 2)
 
     def move_planet(self, pressed):
         if (pressed[pygame.K_LEFT]):
-            self.angle -= 0.025
+            self.angle -= 0.03
         if (pressed[pygame.K_RIGHT]):
-            self.angle += 0.025
+            self.angle += 0.03
 
     def update_planet(self):
-        self.window.blit(self.image, self.rect)
+        game_window.blit(self.image, self.rect)
         self.image, self.rect = rot_center(self.orig_image, math.degrees(self.angle), self.center)
 
-planet = Planet(window)
-player = Player(window, planet)
+planet = Planet()
+player = Player(planet)
 
 caption = pygame.display.set_caption('Catch the Ketchup!')
 clock = pygame.time.Clock()
@@ -42,34 +41,17 @@ def event_handler():
         if event.type == pygame.QUIT:
             running = None
             pygame.quit()
-        elif event.type == pygame.KEYDOWN and event.key == pygame.K_x:
-            generate_bullet()
-
-
-def generate_bullet(size=16):
-    bullet = SuperSprite(window, pygame.image.load("assets/textures/projectile.png").convert_alpha())
-    bullets.append({"sprite": bullet, "angle": 0, "start": (planet.size[0]/2 + player.rect.size[0], planet.size[1]/2 + player.rect.size[1] / 2 - player.rect.y + player.ground_y)}) #(planet.size[0]/2 + player.rect.size[0], -planet.size[1]/2 + player.rect.bottom)
-    return bullet
+        elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+            player.key_handler(event)
 
 while running:
-    window.fill('Black')
-    for obj in bullets:
-        bullet = obj["sprite"]
-        bullet.image = pygame.transform.rotozoom(bullet.orig_image, math.degrees(-obj["angle"]), 1)
-        bullet.rect = bullet.image.get_rect(center=(planet.center[0] + (obj["start"][0]) * math.sin(obj["angle"]), planet.center[1] - (obj["start"][1]) * math.cos(obj["angle"])))
-        print(bullet.rect)
-        window.blit(bullet.image, bullet.rect) 
-        pygame.draw.rect(window, (255, 64, 255), bullet.rect, 2)
-        obj["angle"] += 0.01
-        
-        if (isOutsideSurface(window, bullet.rect.topleft)):
-            bullets.remove(obj)
+    game_window.fill('Black')
 
     planet.update_planet()
     player.update_player()
 
-    pygame.display.flip()
     key_handler()
     event_handler()
+    pygame.display.update()
     clock.tick(60)
     
