@@ -1,5 +1,5 @@
 import pygame
-from random import randint
+from random import randint, random
 from .utils import *
 
 class Planet(SuperSprite):
@@ -8,14 +8,9 @@ class Planet(SuperSprite):
         self.radius = self.image.get_size()[0] / 2
         self.center = (game_window.get_width() / 2, game_window.get_height() + self.radius / 2 + 50)
         self.rect = pygame.rect.Rect(self.center[0] - self.radius, self.center[1] - self.radius, self.radius * 2, self.radius * 2)
-        self.enemy_sprites = [
-            'apple.png',
-            'macaroni.png',
-            'pizza.png'
-        ]
-        for i in range(0, len(self.enemy_sprites)):
-            self.enemy_sprites[i] = pygame.image.load(asset_path("textures", "enemies", self.enemy_sprites[i]))
-        
+        self.enemy_sprites = []
+        for f in os.listdir(asset_path("textures", "enemies")):
+            self.enemy_sprites.append(pygame.image.load(asset_path("textures", "enemies", f)))
         self.enemies = []
         self.frames = 0
 
@@ -23,7 +18,10 @@ class Planet(SuperSprite):
         enemy_img : pygame.Surface = self.enemy_sprites[randint(0,len(self.enemy_sprites) - 1)]
         enemy = SuperSprite(enemy_img)
         enemy.start_pos = (self.radius + enemy_img.get_size()[0] / 2, self.radius + enemy_img.get_size()[1] / 2)
-        enemy.angle = math.radians(randint(10, 40))
+        enemy.dir = 1 if random() < 0.5 else -1
+        enemy.angle = enemy.dir * math.radians(randint(10, 40))
+        enemy.origin = self.center
+        enemy.speed = -0.005
         self.enemies.append(enemy)
 
     def move_planet(self, pressed):
@@ -42,8 +40,5 @@ class Planet(SuperSprite):
             self.generate_enemy()
 
         for enemy in self.enemies:
-            enemy : SuperSprite = enemy
-            enemy.rect = enemy.image.get_rect(center=(self.center[0] + (enemy.start_pos[0]) * math.sin(enemy.angle), self.center[1] - (enemy.start_pos[1]) * math.cos(enemy.angle)))
             enemy.update()
-            enemy.angle -= 0.005
         self.frames += 1
