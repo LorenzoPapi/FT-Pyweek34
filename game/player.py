@@ -1,20 +1,19 @@
-import pygame
 from .utils import *
 from .planet import Planet
 
 class Player(SuperSprite):
     def __init__(self):
-        super().__init__(pygame.image.load(asset_path("textures", "player.png")))
-        self.sprites = [
-            self.orig_image,
+        super().__init__(
+            pygame.image.load(asset_path("textures", "player.png")),
             pygame.image.load(asset_path("textures", "walking_player.png")),
-        ]
+        )
         self.planet : Planet = Planet()
         self.ground_y = self.planet.rect.top
-        self.origin = (game_window.get_width() / 2, self.ground_y - self.image.get_size()[1]/2)
+        self.origin = (game_window.get_width() / 2, self.planet.rect.top - self.image.get_size()[1]/2)
+        self.rect = self.image.get_rect(center=self.origin)
         self.jumping = False
-        self.totalJumps = 10
-        self.jumpCount = 0
+        self.total_jumps = 10
+        self.jump_count = 0
         self.animf = 0
         self.bulletf = 0
         self.moving = False
@@ -38,10 +37,8 @@ class Player(SuperSprite):
             if (self.animf > 0): self.animf = 0
 
         if (left and not right and self.dir == 1):
-            flip_list(self.sprites)
             self.dir = -1
         elif (right and not left and self.dir == -1):
-            flip_list(self.sprites)
             self.dir = 1
         
         self.orig_image = self.sprites[self.index % len(self.sprites)]
@@ -49,17 +46,18 @@ class Player(SuperSprite):
         if pressed[pygame.K_SPACE]:
             if not self.jumping:
                 self.jumping = self.rect.bottom >= self.ground_y
-                self.jumpCount = self.totalJumps
-        elif self.jumping and self.jumpCount > 0:
-                self.jumpCount = 0
+                self.jump_count = self.total_jumps
+        elif self.jumping and self.jump_count > 0:
+            self.jump_count = 0
 
     def update_player(self):
         if self.jumping:
-            if self.jumpCount >= -(self.totalJumps + 1):
-                self.rect.bottom -= self.jumpCount * abs(self.jumpCount) * 0.5
-                self.jumpCount -= 1
+            if self.jump_count >= -(2 * self.total_jumps):
+                friction = 0.8 if self.jump_count > 0 else 0.4
+                self.rect.bottom -= self.jump_count * abs(self.jump_count) * 0.5 * friction
+                self.jump_count -= 1
             else:
-                self.jumpCount = self.totalJumps
+                self.jump_count = self.total_jumps
                 self.jumping = False
         
         self.rect.bottom = clamp(self.rect.bottom, self.ground_y, 0)
@@ -85,16 +83,17 @@ class Player(SuperSprite):
         if (self.bulletf > 0): self.bulletf -= 1
 
         self.move_player(pygame.key.get_pressed())
-        self.planet.update_planet()
-        self.update()
+        self.planet.update()
+        self.draw()
     
     def shoot(self):
-        bullet = SuperSprite(pygame.image.load(asset_path("textures", "projectile.png")))
-        bullet.start_pos = (self.planet.radius + self.rect.size[0], self.planet.radius + self.rect.size[1] / 2 - self.rect.bottom + self.ground_y + -10)
-        bullet.dir = self.dir
-        bullet.angle = math.radians(bullet.dir * 2.2)
-        bullet.origin = self.planet.center
-        bullet.speed = 0.04
-        self.bullets.append(bullet)
+        self.bullets.append(SuperSprite(
+            pygame.image.load(asset_path("textures", "projectile.png")),
+            start_pos = (self.planet.radius + self.rect.size[0], self.planet.radius + self.rect.size[1] / 2 - self.rect.bottom + self.ground_y-10),
+            dir = self.dir,
+            angle = radians(self.dir * 2),
+            origin = self.planet.origin,
+            speed = 0.04
+        ))
         self.bulletf = 10
 
