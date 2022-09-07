@@ -27,12 +27,12 @@ class Planet(SuperSprite):
         self.enemies.append(enemy)
 
     def move_planet(self, pressed):
-        if (pressed[pygame.K_LEFT]):
+        left = pressed[pygame.K_LEFT]
+        right = pressed[pygame.K_RIGHT]
+        if (left and not right):
             self.angle -= 0.03
-            return
-        if (pressed[pygame.K_RIGHT]):
+        if (right and not left):
             self.angle += 0.03
-            return
 
     def update_planet(self):
         game_window.blit(self.image, self.rect)

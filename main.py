@@ -8,13 +8,13 @@ player = Player()
 
 caption = pygame.display.set_caption('Catch the Ketchup!')
 clock = pygame.time.Clock()
-running = True
+running = 1
 
 def event_handler():
     global running
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = None
+            running = 0
             pygame.quit()
         elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
             player.key_handler(event)

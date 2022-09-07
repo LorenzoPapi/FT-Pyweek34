@@ -48,7 +48,7 @@ class SuperSprite(pygame.sprite.Sprite):
         if (self._oldS != self.scale or self._oldA != self.angle or self._oldOI != self.orig_image):
             self.image = pygame.transform.rotozoom(self.orig_image, math.degrees(-self.angle), self.scale)
         game_window.blit(self.image, self.rect)
-        pygame.draw.rect(game_window, (255, 64, 255), self.rect, 2)
+        #pygame.draw.rect(game_window, (255, 64, 255), self.rect, 2)
         self._oldS = self.scale
         self._oldA = self.angle
         self._oldOI = self.orig_image
