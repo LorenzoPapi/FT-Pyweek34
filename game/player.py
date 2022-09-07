@@ -41,11 +41,14 @@ class Player(SuperSprite):
         left = pressed[pygame.K_LEFT]
         if (left ^ right):
             self.moving = True
-        if not (right or left):
+        else:
             self.moving = False
+            self.index = 0
 
         if (left and not right and self.dir != 1):
-            if (self.dir != -1): self._flip_images()
+            if (self.dir != -1):
+                pass 
+            self._flip_images()
             self.dir = 1
         elif (right and not left and self.dir != 0):
             if (self.dir != -1): self._flip_images()
@@ -74,7 +77,7 @@ class Player(SuperSprite):
             bullet : SuperSprite = obj["sprite"]
             bullet.rect = bullet.image.get_rect(center=(self.planet.center[0] + (bullet.start_pos[0]) * math.sin(bullet.angle), self.planet.center[1] - (bullet.start_pos[1]) * math.cos(bullet.angle)))
             bullet.update()
-            bullet.angle += (1 if obj["dir"] == 0 else -1) * 0.04
+            bullet.angle += (1 if obj["dir"] != 1 else -1) * 0.04
             if (isOutsideSurface(game_window, bullet.rect.topleft)):
                 self.bullets.remove(obj)
 
