@@ -1,35 +1,36 @@
-from math import sin, cos, degrees, radians
+from math import ceil, sin, cos, degrees, radians
 from pygame.locals import DOUBLEBUF
 from random import randint, random
 import pygame
 import os
 
-game_window = pygame.display.set_mode((1200, 900), DOUBLEBUF, 16)
-# no work
-game_speed = 1
-#colors = {"RED": (255, 64, 64), "WHITE": (255, 255, 255)}
+SCREEN_RES = 4/3
+SCREEN_HEIGHT = 900
+SCREEN_WIDTH = ceil(SCREEN_RES * SCREEN_HEIGHT) - 1
+SCREEN_CENTER = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2); SCREEN_CENTERX = SCREEN_CENTER[0]; SCREEN_CENTERY = SCREEN_CENTER[1]
 
+SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), DOUBLEBUF, 16)
+FPS = 30
 
-def change_game_speed(v):
-    global game_speed
-    game_speed = v
+def load_texture(*args):
+    return pygame.image.load(asset_path("textures", *args)).convert_alpha()
 
 
 def clamp(v, maxv, minv):
     return min(max(v, minv), maxv)
 
 
-def isOutsideSurface(surf: pygame.Surface, point):
+def is_outside_surface(surf: pygame.Surface, point):
     h, w = surf.get_height(), surf.get_width()
     return (point[0] < 0 or point[0] > w) or (point[1] < 0 or point[1] > h)
 
 # https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
 
+def blit_rotate_center(surf : pygame.Surface, image : pygame.Surface, topleft, angle):
+    rotated_image = pygame.transform.rotate(image, angle)
+    new_rect = rotated_image.get_rect(center = image.get_rect(topleft = topleft).center)
 
-def rot_center(image: pygame.Surface, angle, center):
-    rotated = pygame.transform.rotozoom(image, angle, 1)
-    return rotated, rotated.get_rect(center=image.get_rect(center=center).center)
-
+    surf.blit(rotated_image, new_rect)
 
 def asset_path(*argv):
     p = os.path.join(".", "assets")
@@ -43,12 +44,62 @@ def flip_list(lst: list):
     lst.clear()
     lst.extend([pygame.transform.flip(s, True, False) for s in old])
 
+class ScaledSprite(pygame.sprite.Sprite):
+    def __init__(self, *sprites : pygame.Surface):
+        super().__init__()
+        self.sprites = [(pygame.transform.scale(s, (s.get_width() / SCREEN_RES, s.get_height() / SCREEN_RES))) for s in sprites]
+        self.image = self.sprites[0]
 
-class SuperSprite(pygame.sprite.Sprite):
+class Fader(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image : pygame.Surface = load_texture("pixel.png")
+        self.image.fill((0, 0, 0))
+        self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.rect = self.image.get_rect(topleft = (0, 0))
+        self.timer = 0
+        self.total = 0
+        self.fading = None
+
+    def start(self, sec, fade=True):
+        if (self.timer == 0):
+            self.timer = self.total = sec * FPS
+            self.fading = fade
+        
+    def update(self):
+        if (self.timer > 0): 
+            self.timer -= 1
+            alpha = 255 * self.timer / self.total
+            self.image.set_alpha(alpha if self.fading else 255 - alpha)
+        elif self.fading:
+            self.total = 0
+        SCREEN.blit(self.image, self.rect)
+    
+    def has_ended(self):
+        return self.timer == 0
+
+
+class ParallaxBG(pygame.sprite.Sprite):
+    def __init__(self, image : pygame.Surface):
+        super().__init__()
+        self.image = image.convert_alpha()
+        self.width = self.image.get_width()
+        self.rect = self.image.get_rect()
+        self.scrollx = 0
+    
+    def draw(self):
+        for i in range(0, ceil(SCREEN_WIDTH / self.width) + 1):
+            self.rect.x = i * self.width + self.scrollx
+            SCREEN.blit(self.image, self.rect)
+        self.scrollx -= 3
+        
+        if (abs(self.scrollx) > self.width):
+            self.scrollx = 0
+        
+class RotatingSprite(pygame.sprite.Sprite):
     def __init__(self, *args : pygame.Surface, **kargs):
         super().__init__()
-        self.sprites = [s.convert_alpha() for s in args]
-        
+        self.sprites = [s for s in args]
         self.origin = kargs.get("origin", (0, 0))
         self.start_pos = kargs.get("start_pos", (0, 0))
         self.speed = kargs.get("speed", 0)
@@ -56,7 +107,7 @@ class SuperSprite(pygame.sprite.Sprite):
         self.dir = kargs.get("dir", 1)  # -1 is left, 1 is right
         self.scale = kargs.get("scale", 1)
         self.angle = kargs.get("angle", 0)
-        self.orig_image = self.sprites[0]        
+        self.orig_image = self.sprites[0]     
         
         self._oldD = self.dir
         self._oldS = self.scale
@@ -70,6 +121,9 @@ class SuperSprite(pygame.sprite.Sprite):
         self.image = pygame.transform.rotozoom(self.orig_image, degrees(-self.angle), self.scale)
         self.rect = self.image.get_rect(center=self.origin)
 
+        self.framea = 0
+        self.index = 0
+
     def change_image(self):
         if (self.dir != self._oldD):
             flip_list(self.sprites)
@@ -79,16 +133,29 @@ class SuperSprite(pygame.sprite.Sprite):
 
     def draw(self):
         self.change_image()
-        game_window.blit(self.image, self.rect)
-        pygame.draw.rect(game_window, (255, 64, 255), self.rect, 2)
+        SCREEN.blit(self.image, self.rect)
+        #pygame.draw.rect(SCREEN, (255, 64, 255), self.rect, 2)
         self._oldS = self.scale
         self._oldA = self.angle
         self._oldOI = self.orig_image
         self._oldD = self.dir
 
     def update(self):
-        self.angle += self.dir * self.speed
-        self.angle *= game_speed
         self.change_image()
-        self.rect = self.image.get_rect(center=((self.origin[0] + (self.start_pos[0]) * sin(self.angle), self.origin[1] - (self.start_pos[1]) * cos(self.angle))))
+        self.rect = self.image.get_rect(center=((self.origin[0] + self.start_pos[0] * sin(self.angle), self.origin[1] - self.start_pos[1] * cos(self.angle))))
         self.draw()
+        self.angle += self.dir * self.speed
+    
+    def animate(self):
+        if (self.framea % 10 == 0):
+            self.orig_image = self.sprites[self.index % len(self.sprites)]
+            self.index += 1
+        self.framea += 1
+    
+class LineSprite(RotatingSprite):
+    def update(self):
+        self.change_image()
+        self.rect = self.image.get_rect(center = (self.origin[0] + self.start_pos[0] * sin(self.angle), self.origin[1] - abs(self.start_pos[1] * sin(self.angle))))
+        self.draw()
+        self.angle += self.dir * self.speed
+    

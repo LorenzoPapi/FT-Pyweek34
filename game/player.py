@@ -1,15 +1,16 @@
 from .utils import *
 from .planet import Planet
 
-class Player(SuperSprite):
+class Player(RotatingSprite):
     def __init__(self):
         super().__init__(
-            pygame.image.load(asset_path("textures", "player.png")),
-            pygame.image.load(asset_path("textures", "walking_player.png")),
+            load_texture("player0.png"),
+            load_texture("player1.png"),
         )
+        self.proj_tex = load_texture("projectile.png")
         self.planet : Planet = Planet()
         self.ground_y = self.planet.rect.top
-        self.origin = (game_window.get_width() / 2, self.planet.rect.top - self.image.get_size()[1]/2)
+        self.origin = (SCREEN_CENTERX, self.ground_y - self.image.get_height()/2)
         self.rect = self.image.get_rect(center=self.origin)
         self.jumping = False
         self.total_jumps = 10
@@ -64,7 +65,7 @@ class Player(SuperSprite):
 
         for bullet in self.bullets:
             bullet.update()
-            if (isOutsideSurface(game_window, bullet.rect.topleft)):
+            if (is_outside_surface(SCREEN, bullet.rect.topleft)):
                 self.bullets.remove(bullet)
 
         for enemy in self.planet.enemies:
@@ -87,8 +88,8 @@ class Player(SuperSprite):
         self.draw()
     
     def shoot(self):
-        self.bullets.append(SuperSprite(
-            pygame.image.load(asset_path("textures", "projectile.png")),
+        self.bullets.append(RotatingSprite(
+            self.proj_tex,
             start_pos = (self.planet.radius + self.rect.size[0], self.planet.radius + self.rect.size[1] / 2 - self.rect.bottom + self.ground_y-10),
             dir = self.dir,
             angle = radians(self.dir * 2),
