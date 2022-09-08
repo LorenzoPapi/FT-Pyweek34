@@ -27,7 +27,7 @@ def is_outside_surface(surf: pygame.Surface, point):
 # https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
 
 def blit_rotate_center(surf : pygame.Surface, image : pygame.Surface, topleft, angle):
-    rotated_image = pygame.transform.rotate(image, angle)
+    rotated_image = pygame.transform.rotate(image, angle).convert_alpha()
     new_rect = rotated_image.get_rect(center = image.get_rect(topleft = topleft).center)
 
     surf.blit(rotated_image, new_rect)
@@ -78,7 +78,6 @@ class Fader(pygame.sprite.Sprite):
     def has_ended(self):
         return self.timer == 0
 
-
 class ParallaxBG(pygame.sprite.Sprite):
     def __init__(self, image : pygame.Surface):
         super().__init__()
@@ -109,17 +108,14 @@ class RotatingSprite(pygame.sprite.Sprite):
         self.angle = kargs.get("angle", 0)
         self.orig_image = self.sprites[0]     
         
-        self._oldD = self.dir
-        self._oldS = self.scale
-        self._oldA = self.angle
-        self._oldOI = self.orig_image
+        self._oldD = 1
+        self._oldS = 1
+        self._oldA = 0
+        self._oldOI = None
 
-        if (self.dir == -1):
-            flip_list(self.sprites)
-            self.orig_image = self.sprites[0]
-
-        self.image = pygame.transform.rotozoom(self.orig_image, degrees(-self.angle), self.scale)
+        self.change_image()
         self.rect = self.image.get_rect(center=self.origin)
+        self.change_rect()
 
         self.framea = 0
         self.index = 0
@@ -140,22 +136,98 @@ class RotatingSprite(pygame.sprite.Sprite):
         self._oldOI = self.orig_image
         self._oldD = self.dir
 
-    def update(self):
-        self.change_image()
+    def change_rect(self):
         self.rect = self.image.get_rect(center=((self.origin[0] + self.start_pos[0] * sin(self.angle), self.origin[1] - self.start_pos[1] * cos(self.angle))))
+
+    def update(self):
         self.draw()
-        self.angle += self.dir * self.speed
+        if (not game.paused):
+            self.change_image()
+            self.change_rect()
+            self.angle += self.dir * self.speed
     
     def animate(self):
-        if (self.framea % 10 == 0):
-            self.orig_image = self.sprites[self.index % len(self.sprites)]
-            self.index += 1
-        self.framea += 1
-    
-class LineSprite(RotatingSprite):
-    def update(self):
-        self.change_image()
+        if (not game.paused):
+            if (self.framea % 10 == 0):
+                self.orig_image = self.sprites[self.index % len(self.sprites)]
+                self.index += 1
+            self.framea += 1
+
+
+class DoubleSinSprite(RotatingSprite):
+    def change_rect(self):
         self.rect = self.image.get_rect(center = (self.origin[0] + self.start_pos[0] * sin(self.angle), self.origin[1] - abs(self.start_pos[1] * sin(self.angle))))
+
+    # def update(self):
+    #     super().update()
+    #     if (self.angle > 3.1):
+    #         self.speed = -self.speed
+    #         self.angle = 3.08
+    #         print("A A")
+
+class StraightLineSprite(RotatingSprite):
+    def __init__(self, *args: pygame.Surface, **kargs):
+        super().__init__(*args, **kargs)
+        self.rect = self.image.get_rect(center=((self.origin[0], self.origin[1] - self.start_pos[1])))
+
+    def change_rect(self):
+        self.rect.x += self.speed
+
+    def update(self):
+        if (not game.paused):
+            self.change_image()
+            self.change_rect()
         self.draw()
-        self.angle += self.dir * self.speed
+
+class Game():
+    def __init__(self):
+        pygame.init()
+        pygame.display.set_caption('Catch the Ketchup!')
+        self.clock = pygame.time.Clock()
+        self.fader = Fader()
+        self.player = None
+        self.game_start = False
+        self.paused = False
+        self.running = 1
     
+    def run(self):
+        bg = ParallaxBG(load_texture("title", "bg.png"))
+        planet = pygame.transform.scale(load_texture("red_planet.png"), (300, 300)).convert_alpha()
+        title = ScaledSprite(load_texture("title", "title.png"))
+        title2 = ScaledSprite(load_texture("title", "title2.png"))
+        angle = 0
+
+        self.fader.start(3)
+        while self.running:
+            bg.draw()
+            if self.game_start:
+                self.player.update_player()
+            else:
+                blit_rotate_center(SCREEN, planet, (810, 470), angle)
+                SCREEN.blit(title.image, (SCREEN_CENTERX - title.image.get_width() / 2, 230 - title.image.get_height() / 2 + 10 * sin(angle / 20)))
+                SCREEN.blit(title2.image, (SCREEN_CENTERX - title2.image.get_width() / 2, SCREEN_HEIGHT - 100 - title2.image.get_height() / 2 + 5 * sin(1.5 + angle / 20)))
+                angle += 0.5
+    
+            if (self.fader.fading == False and self.fader.has_ended() and not self.game_start):
+                self.game_start = True
+                self.fader.start(1)
+            
+            self.fader.update()
+            self.event_handler()
+            pygame.display.update()
+            self.clock.tick(FPS)
+        pygame.quit()
+        exit(0)
+    
+    def event_handler(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = 0
+            else:
+                if self.game_start:
+                    if self.fader.has_ended() and event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+                        self.player.key_handler(event)
+                elif self.fader.has_ended() and event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    self.fader.start(3, False)
+
+game = Game()

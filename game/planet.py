@@ -5,9 +5,9 @@ class Planet(RotatingSprite):
         super().__init__(
             load_texture("red_planet.png"),
         )
-        self.orig_image = pygame.transform.scale(self.orig_image, (1500, 1500))
+        self.image = pygame.transform.scale2x(pygame.transform.scale2x(self.image))
         self.radius = self.image.get_width() / 2
-        self.origin = (SCREEN_CENTERX, SCREEN_HEIGHT + self.radius / 2 - 100)
+        self.origin = (SCREEN_CENTERX, SCREEN_HEIGHT + self.radius / 2 + 400)
         self.rect = self.image.get_rect(center=self.origin)
         lst = sorted(os.listdir(asset_path("textures", "enemies")))
         self.walking_enemies = [load_texture("enemies", f) for f in lst if not f.startswith("f_")]
@@ -17,7 +17,7 @@ class Planet(RotatingSprite):
 
     def generate_walking_enemy(self):
         enemy = None
-        if (random() < 0.5):
+        if (random() < 0.7):
             scale = 2
             enemy_index = randint(0,len(self.walking_enemies) / 2 - 1) * 2
             image = self.walking_enemies[enemy_index]
@@ -28,21 +28,23 @@ class Planet(RotatingSprite):
                 dir = dir,
                 angle = dir * radians(180 - randint(10, 40)),
                 origin = self.origin,
-                speed = -0.01,
+                speed = -0.03,
                 scale = scale
             )
+            enemy.hp = 2
         else:
             enemy_index = randint(0,len(self.flying_enemies) / 2 - 1) * 2
             image = self.flying_enemies[enemy_index]
             dir = 1 if random() < 0.5 else -1
-            enemy = LineSprite(
+            enemy = DoubleSinSprite(
                 image, self.flying_enemies[enemy_index + 1],
-                start_pos = (700, 200),
+                start_pos = (700, 300),
                 dir = dir,
                 angle = dir * radians(90),
-                origin = (SCREEN_CENTERX, self.rect.top - image.get_height() / 2 - randint(0, 60)),
+                origin = (SCREEN_CENTERX, self.rect.top + image.get_height() - randint(20, 50)),
                 speed = -0.06,
             )
+            enemy.hp = 5
         self.enemies.append(enemy)
         self.enemyf = randint(40, 100)
 
@@ -51,17 +53,22 @@ class Planet(RotatingSprite):
         left = pressed[pygame.K_LEFT]
         right = pressed[pygame.K_RIGHT]
         if (left and not right):
-            self.angle -= 2
+            self.angle -= 0
         if (right and not left):
-            self.angle += 2
+            self.angle += 0
 
     def update(self):
         blit_rotate_center(SCREEN, self.image, (self.rect.topleft), self.angle)
-        if (len(self.enemies) < 10 and self.enemyf == 0):
-            self.generate_walking_enemy()
+        if not game.paused:
+            if (len(self.enemies) < 10 and self.enemyf == 0):
+                self.generate_walking_enemy()
 
+            if (self.enemyf > 0): self.enemyf -= 1
+        
         for enemy in self.enemies:
             enemy.update()
             enemy.animate()
+            if (enemy.hp and enemy.hp <= 0):
+                self.enemies.remove(enemy)
         
-        if (self.enemyf > 0): self.enemyf -= 1
+            
