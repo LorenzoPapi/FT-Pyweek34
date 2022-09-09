@@ -28,7 +28,7 @@ class Planet(RotatingSprite):
                 dir = dir,
                 angle = dir * radians(180 - randint(10, 40)),
                 origin = self.origin,
-                speed = -0.03,
+                speed = -0.01,
                 scale = scale
             )
             enemy.hp = 2
@@ -42,7 +42,7 @@ class Planet(RotatingSprite):
                 dir = dir,
                 angle = dir * radians(90),
                 origin = (SCREEN_CENTERX, self.rect.top + image.get_height() - randint(20, 50)),
-                speed = -0.06,
+                speed = -0.02,
             )
             enemy.hp = 5
         self.enemies.append(enemy)

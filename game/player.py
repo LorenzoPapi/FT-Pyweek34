@@ -4,7 +4,7 @@ from .planet import Planet
 class Player(RotatingSprite):
     def __init__(self):
         self.init_player()
-    
+        
     def key_handler(self, event):
         if (event.type == pygame.KEYDOWN):
             if (event.key == pygame.K_x and self.bulletf == 0 and not game.paused):
@@ -12,6 +12,7 @@ class Player(RotatingSprite):
             elif (event.key == pygame.K_p):
                 game.paused = not game.paused
                 game.fader.image.set_alpha(127 if game.paused else 0)
+                
 
     def move_player(self, pressed):
         if not game.paused:
@@ -82,7 +83,8 @@ class Player(RotatingSprite):
             self.game_over = False
             game.game_start = False
             self.init_player()
-    
+        if game.paused:
+            SCREEN.blit(text_paused, (400, 400))
     def shoot(self):
         self.bullets.append(StraightLineSprite(
             self.proj_tex,
@@ -113,4 +115,5 @@ class Player(RotatingSprite):
         self.game_over = False
         self.bullets = []
 
+text_paused = pygame.image.load('assets/textures/paused.png')
 game.player = Player()

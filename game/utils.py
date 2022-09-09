@@ -204,7 +204,7 @@ class Game():
             if self.game_start:
                 self.player.update_player()
             else:
-                SCREEN.blit(astronaut, (104, 450 + 5 * sin(1.5 + angle / 20)))
+                SCREEN.blit(astronaut, (104, 450 + 10 * sin(3 + angle / 20)))
                 blit_rotate_center(SCREEN, planet, (810, 470), angle)
                 SCREEN.blit(title.image, (SCREEN_CENTERX - title.image.get_width() / 2, 230 - title.image.get_height() / 2 + 10 * sin(angle / 20)))
                 SCREEN.blit(title2.image, (SCREEN_CENTERX - title2.image.get_width() / 2, SCREEN_HEIGHT - 100 - title2.image.get_height() / 2 + 5 * sin(1.5 + angle / 20)))
