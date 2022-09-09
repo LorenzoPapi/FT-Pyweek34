@@ -1,8 +1,9 @@
-from math import ceil, sin, cos, degrees, radians
-from pygame.locals import DOUBLEBUF
-from random import randint, random
-import pygame
 import os
+from math import ceil, cos, degrees, pi, radians, sin
+from random import randint, random
+
+import pygame
+from pygame.locals import DOUBLEBUF
 
 pygame.init()
 
@@ -31,28 +32,19 @@ def load_all_textures(dir):
         else:
             load_all_textures(i)
 
-def load_all_fonts(dir):
-    for i in sorted(os.listdir(asset_path("fonts", dir))):
-        if (i.endswith(".ttf")):
-            a = i.split("_s")
-            FONTS[dir + "\\" + a[0] if dir != "" else a[0]] = pygame.font.Font(asset_path("fonts", dir, i), int(a[1].split(".")[0]))
-        else:
-            load_all_fonts(i)
-
 TEXTURES = {}
 SOUNDS = {}
 FONTS = {}
 load_all_textures("")
-load_all_fonts("")
 
-# def floatRange(start, end, step):
-#     values = []
-#     step = decimal.Decimal(str(step))
-#     while start < end:
-#         values.append(float(start))
-#         start += step
-        
-#     return values
+for i in sorted(os.listdir(asset_path("audio", "sounds"))):
+    SOUNDS[i] = pygame.mixer.Sound(asset_path("audio", "sounds", i))
+
+for i in sorted(os.listdir(asset_path("fonts"))):
+    if (i.endswith(".ttf")):
+        a = i.split("_s")
+        FONTS[a[0]] = pygame.font.Font(asset_path("fonts", i), int(a[1].split(".")[0]))
+    
 
 def clamp(v, maxv, minv):
     return min(max(v, minv), maxv)
@@ -137,10 +129,14 @@ class RotatingSprite(pygame.sprite.Sprite):
         self._oldA = 0
         self._oldOI = None
 
+        self.rect = self.orig_image.get_rect(center=self.origin)
         self.change_image()
-        self.rect = self.image.get_rect(center=self.origin)
+        self._oldS = self.scale
+        self._oldA = self.angle
+        self._oldOI = self.orig_image
+        self._oldD = self.dir
         self.change_rect()
-
+        
         self.framea = 0
         self.index = 0
 
@@ -168,11 +164,11 @@ class RotatingSprite(pygame.sprite.Sprite):
         if (not game.paused):
             self.change_image()
             self.change_rect()
-            self.angle += self.dir * self.speed
+            self.angle += self.dir * self.speed * (1 if not hasattr(self, "mul") else self.mul)
     
     def animate(self):
         if (not game.paused):
-            if (self.framea % 10 == 0):
+            if (self.framea % ceil(10 / (1 if not hasattr(self, "mul") else self.mul)) == 0):
                 self.orig_image = self.sprites[self.index % len(self.sprites)]
                 self.index += 1
             self.framea += 1
@@ -199,45 +195,68 @@ class StraightLineSprite(RotatingSprite):
 class Game():
     def __init__(self):
         pygame.display.set_caption('Catch the Ketchup!')
+        pygame.display.set_icon(TEXTURES["red_planet.png"])
         self.clock = pygame.time.Clock()
         self.fader = Fader()
         self.player = None
         self.is_playing = False
         self.paused = False
         self.running = 1
-        self.score = 0
+        self.max_score = self.score = 0
+        try:
+            data = open(os.path.join(".", "score.txt"), "r")
+            self.max_score = int(data.read())
+            data.close()
+        except:
+            print("Previous score not found!")
     
     def run(self):
         bg = ParallaxBG(TEXTURES["title\\bg.png"])
         planet = pygame.transform.scale(TEXTURES["red_planet.png"], (300, 300))
-        planet_cache = [(pygame.transform.rotate(planet, a)) for a in range (0, 360)]
+        planet_cache = [(pygame.transform.rotate(planet, a)) for a in range (0, 360, 2)]
         title = ScaledSprite(TEXTURES["title\\title.png"])
         title2 = ScaledSprite(TEXTURES["title\\title2.png"])
-        astronaut = ScaledSprite(TEXTURES["title\\a_1.png"])
+        astronaut = ScaledSprite(pygame.transform.scale(TEXTURES["player0.png"], (145, 333)))
         angle = 0
 
         self.fader.start(3)
+        SOUNDS["main_menu.wav"].play(loops=-1, fade_ms = 3000)
         while self.running:
             bg.draw()
             if self.is_playing:
+                if self.player.game_over:
+                    max_score = FONTS["Cave-Story"].render(f"Highest score: {self.max_score}", False, (255, 0, 0))
+                    SCREEN.blit(max_score, (SCREEN_CENTERX - max_score.get_width() / 2, SCREEN_CENTERY - max_score.get_height() / 2 + 100))
                 self.player.update_player()
-                score = FONTS["Cave-Story"].render(f"SCORE: {self.score}", False, (255, 0, 0))
-                SCREEN.blit(score, (SCREEN_CENTERX - score.get_width() / 2, SCREEN_CENTERY - score.get_height() / 2 if self.player.game_over else 20))
+                score = FONTS["Cave-Story"].render(f"Score: {self.score}", False, (255, 0, 0))
+                SCREEN.blit(score, (SCREEN_CENTERX - score.get_width() / 2, SCREEN_CENTERY - score.get_height() / 2 - 100 if self.player.game_over else 20))
+                for i in range (1, 4):
+                    tex = TEXTURES["empty_h.png"]
+                    SCREEN.blit(tex, (SCREEN_WIDTH - tex.get_width()*i - 3*i, 18))
+                for i in range (1, self.player.lives+1):
+                    tex = TEXTURES["heart.png"]
+                    SCREEN.blit(tex, (SCREEN_WIDTH - tex.get_width()*i - 3*i, 18))
                 if self.fader.has_ended:
                     if self.paused and self.fader.image.get_alpha() != 127:
                         self.fader.image.set_alpha(127)
                     elif not self.paused and self.fader.image.get_alpha() != 0:
                         self.fader.image.set_alpha(0)
+                if self.score > self.max_score:
+                    self.max_score = self.score
+                    data = open(os.path.join(".", "score.txt"), "w")
+                    data.write(str(self.max_score))
+                    data.close()
             else:
                 SCREEN.blit(astronaut.image, (104, 450 + 10 * sin(3 + angle / 20)))
-                SCREEN.blit(planet_cache[ceil(angle) % 360 - 1], planet_cache[ceil(angle) % 360 - 1].get_rect(center = planet.get_rect(topleft = (810, 470)).center))
+                SCREEN.blit(planet_cache[round(angle / 2) % len(planet_cache)], planet_cache[round(angle / 2) % len(planet_cache)].get_rect(center = planet.get_rect(topleft = (810, 470)).center))
                 SCREEN.blit(title.image, (SCREEN_CENTERX - title.image.get_width() / 2, 230 - title.image.get_height() / 2 + 10 * sin(angle / 20)))
                 SCREEN.blit(title2.image, (SCREEN_CENTERX - title2.image.get_width() / 2, SCREEN_HEIGHT - 100 - title2.image.get_height() / 2 + 5 * sin(1.5 + angle / 20)))
-                angle += 0.5
+                angle += 2
     
             if (self.fader.fading == False and self.fader.has_ended() and not self.is_playing):
                 self.is_playing = True
                 self.fader.start(1)
+                SOUNDS["battle.mp3"].play(loops=-1, fade_ms=1000)
                 
             self.event_handler()
             self.fader.update()
@@ -259,5 +278,6 @@ class Game():
                             game.paused = not game.paused
                 elif self.fader.has_ended() and event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                     self.fader.start(3, False)
+                    SOUNDS["main_menu.wav"].fadeout(3000)
 
 game = Game()

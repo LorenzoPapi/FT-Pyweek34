@@ -63,17 +63,21 @@ class Player(RotatingSprite):
                 self.rect.bottom = clamp(self.rect.bottom, self.ground_y, 0)
 
                 for enemy in self.planet.enemies:
-                    if pygame.sprite.collide_rect(enemy, self):
-                        self.game_over = True
-                        self.image.set_alpha(0)
                     for bullet in self.bullets:
                         if pygame.sprite.collide_rect(enemy, bullet):
                             enemy.hp -= 1
                             self.bullets.remove(bullet)
+                    if pygame.sprite.collide_rect(enemy, self):
+                        self.lives -= 1
+                        if self.lives == 0:
+                            enemy.hp = 0
+                            self.game_over = True
+                            SOUNDS["battle.mp3"].stop()
+                            SOUNDS["game_over.mp3"].play()
 
                 if self.animf == 0 and self.moving:
                     self.index += 1
-                    self.animf = 10
+                    self.animf = 5
 
                 if (self.animf > 0):
                     self.animf -= 1
@@ -82,7 +86,8 @@ class Player(RotatingSprite):
 
                 self.move_player(pygame.key.get_pressed())
             else:
-                draw_middle("paused.png")
+                score = FONTS["Cave-Story"].render("Paused", False, (255, 0, 0))
+                SCREEN.blit(score, (SCREEN_CENTERX - score.get_width() / 2, SCREEN_CENTERY - score.get_height() / 2 - self.image.get_height()))
         else:
             game.paused = True
             draw_middle("game_over.png")
@@ -97,13 +102,19 @@ class Player(RotatingSprite):
             speed=self.dir * 40
         ))
         self.bulletf = 3
+        SOUNDS["shoot.mp3"].set_volume(0.3)
+        SOUNDS["shoot.mp3"].play()
 
     def init_player(self):
         super().__init__(
             TEXTURES["player0.png"],
             TEXTURES["player1.png"],
         )
-        self.planet: Planet = Planet()
+        if hasattr(self, "planet"):
+            self.planet.initialize_planet()
+            SOUNDS["battle.mp3"].play(loops=-1)
+        else:
+            self.planet: Planet = Planet()
         self.ground_y = self.planet.rect.top
         self.origin = (SCREEN_CENTERX, self.ground_y - self.image.get_height()/2)
         self.rect = self.image.get_rect(center=self.origin)
@@ -117,6 +128,7 @@ class Player(RotatingSprite):
         self.game_over = False
         self.bullets = []
         game.score = 0
+        self.lives = 1
 
 
 game.player = Player()
