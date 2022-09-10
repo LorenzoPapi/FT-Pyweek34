@@ -51,8 +51,8 @@ SOUNDS = {}
 FONTS = {}
 load_all_textures("")
 
-for i in sorted(os.listdir(asset_path("audio", "sounds"))):
-    SOUNDS[i] = pygame.mixer.Sound(asset_path("audio", "sounds", i))
+for i in sorted(os.listdir(asset_path("sounds"))):
+    SOUNDS[i] = pygame.mixer.Sound(asset_path("sounds", i))
 
 for i in sorted(os.listdir(asset_path("fonts"))):
     if (i.endswith(".ttf")):
