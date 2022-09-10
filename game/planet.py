@@ -73,7 +73,7 @@ class Planet(RotatingSprite):
             if enemy.hp <= 0:
                 SOUNDS["score_up.mp3"].play()
                 game.score += 20 if enemy.maxhp == 5 else 10
-                if game.player.lives < 3 and game.score >= 150 and game.score % 150 <= 10:
+                if game.player.lives < 3 and game.score % 150 == 0:
                     game.player.lives += 1
                 self.enemies.remove(enemy)
             else:
