@@ -63,18 +63,10 @@ def is_outside_surface(surf: pygame.Surface, point):
     h, w = surf.get_height(), surf.get_width()
     return (point[0] < 0 or point[0] > w) or (point[1] < 0 or point[1] > h)
 
-# https://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
-
 def flip_list(lst: list):
     old = lst.copy()
     lst.clear()
     lst.extend([pygame.transform.flip(s, True, False) for s in old])
-
-class ScaledSprite(pygame.sprite.Sprite):
-    def __init__(self, *sprites : pygame.Surface):
-        super().__init__()
-        self.sprites = [(pygame.transform.scale(s, (s.get_width() / 1920, s.get_height() / 1080))) for s in sprites]
-        self.image = self.sprites[0]
 
 class Fader(pygame.sprite.Sprite):
     def __init__(self):
@@ -129,7 +121,7 @@ class RotatingSprite(pygame.sprite.Sprite):
         self.start_pos = kargs.get("start_pos", (0, 0))
         self.speed = kargs.get("speed", 0)
         
-        self.dir = kargs.get("dir", 1)  # -1 is left, 1 is right
+        self.dir = kargs.get("dir", 1)  
         self.scale = kargs.get("scale", 1)
         self.angle = kargs.get("angle", 0)
         self.orig_image = self.sprites[0]     
@@ -160,7 +152,6 @@ class RotatingSprite(pygame.sprite.Sprite):
     def draw(self):
         self.change_image()
         SCREEN.blit(self.image, self.rect)
-        #pygame.draw.rect(SCREEN, (255, 64, 255), self.rect, 2)
         self._oldS = self.scale
         self._oldA = self.angle
         self._oldOI = self.orig_image
@@ -291,5 +282,5 @@ class Game():
                 elif self.fader.has_ended() and event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                     self.fader.start(3, False)
                     SOUNDS["main_menu.wav"].fadeout(3000)
-
+                    
 game = Game()
