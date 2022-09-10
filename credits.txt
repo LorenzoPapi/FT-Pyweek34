@@ -1,0 +1,14 @@
+Battle music & Menu music: https://opengameart.org/content/nes-shooter-music-5-tracks-3-jingles  Mars.mp3 & Map_basic_version.wav
+Game over sound: https://opengameart.org/content/game-over-soundold-school GameOver.mp3
+Score sound: https://opengameart.org/content/level-up-power-up-coin-get-13-sounds Rise03.aif
+Heart pixel art: https://opengameart.org/content/heart-pixel-art heart pixel art 64x64.png
+Font: https://fontlibrary.org/en/font/cave-story Cave-Story.ttf
+Banana enemy: https://opengameart.org/content/good-fruits-m484-games
+Enemy wings: https://opengameart.org/content/white-wing-32x32
+Enemy cow: https://game-icons.net/1x1/delapouite/cow.html#download
+Space background: https://opengameart.org/content/space-star-background
+Apple enemy: https://opengameart.org/content/apple-2
+Macaroni enemy: https://opengameart.org/content/macaroni-svg
+Pizza enemy: https://opengameart.org/content/pizza-sprite
+Projectile sound effect: https://freesound.org/people/jeckkech/sounds/391660/
+Ananas enemy: https://opengameart.org/content/icons-food
