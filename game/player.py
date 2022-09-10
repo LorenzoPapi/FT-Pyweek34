@@ -69,6 +69,7 @@ class Player(RotatingSprite):
                             self.bullets.remove(bullet)
                     if pygame.sprite.collide_rect(enemy, self):
                         self.lives -= 1
+                        self.planet.enemies.remove(enemy)
                         if self.lives == 0:
                             enemy.hp = 0
                             self.game_over = True
@@ -87,7 +88,7 @@ class Player(RotatingSprite):
                 self.move_player(pygame.key.get_pressed())
             else:
                 score = FONTS["Cave-Story"].render("Paused", False, (255, 0, 0))
-                SCREEN.blit(score, (SCREEN_CENTERX - score.get_width() / 2, SCREEN_CENTERY - score.get_height() / 2 - self.image.get_height()))
+                SCREEN.blit(score, (S_INFO["cx"] - score.get_width() / 2, S_INFO["cy"] - score.get_height() / 2 - self.image.get_height()))
         else:
             game.paused = True
             draw_middle("game_over.png")
@@ -116,7 +117,7 @@ class Player(RotatingSprite):
         else:
             self.planet: Planet = Planet()
         self.ground_y = self.planet.rect.top
-        self.origin = (SCREEN_CENTERX, self.ground_y - self.image.get_height()/2)
+        self.origin = (S_INFO["cx"], self.ground_y - self.image.get_height()/2)
         self.rect = self.image.get_rect(center=self.origin)
         self.jumping = False
         self.total_jumps = 10

@@ -3,21 +3,26 @@ from math import ceil, cos, degrees, pi, radians, sin
 from random import randint, random
 
 import pygame
-from pygame.locals import DOUBLEBUF
+from pygame.locals import DOUBLEBUF, RESIZABLE
 
 pygame.init()
-
-SCREEN_RES = 4/3
-SCREEN_HEIGHT = 900
-SCREEN_WIDTH = ceil(SCREEN_RES * SCREEN_HEIGHT) - 1
-SCREEN_CENTER = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2); SCREEN_CENTERX = SCREEN_CENTER[0]; SCREEN_CENTERY = SCREEN_CENTER[1]
-
-SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), DOUBLEBUF, 16)
+S_INFO = {}
+def update_screen_info():
+    info = pygame.display.Info()
+    S_INFO["h"] = min(1024, info.current_h)
+    S_INFO["w"] = min(1200, info.current_w)
+    S_INFO["r"] = S_INFO["w"] / S_INFO["h"]
+    S_INFO["c"] = (S_INFO["w"] / 2, S_INFO["h"] / 2); 
+    S_INFO["cx"] = S_INFO["c"][0]; S_INFO["cy"] = S_INFO["c"][1]
+    S_INFO["sw"] = S_INFO["w"] / 1200; S_INFO["sh"] = S_INFO["h"] / 900
+    
+update_screen_info()
+SCREEN = pygame.display.set_mode((S_INFO["w"], S_INFO["h"]), DOUBLEBUF)
 FPS = 30
 
 def draw_middle(tex):
     b = TEXTURES[tex]
-    SCREEN.blit(b, (SCREEN_CENTERX - b.get_width() / 2, SCREEN_CENTERY - b.get_height() / 2))
+    SCREEN.blit(b, (S_INFO["cx"] - b.get_width() / 2, S_INFO["cy"] - b.get_height() / 2))
 
 def asset_path(*argv):
     p = os.path.join(".", "assets")
@@ -28,7 +33,12 @@ def asset_path(*argv):
 def load_all_textures(dir):
     for i in sorted(os.listdir(asset_path("textures", dir))):
         if (i.endswith(".png")):
-            TEXTURES[dir + "\\" + i if dir != "" else i] = pygame.image.load(asset_path("textures", dir, i)).convert_alpha()
+            orig = pygame.image.load(asset_path("textures", dir, i)).convert_alpha()
+            name = dir + "\\" + i if dir != "" else i
+            if (orig.get_width() > 10):
+                TEXTURES[name] = pygame.transform.scale(orig, (orig.get_width() * (S_INFO["sw"] if (orig.get_width() != orig.get_height()) else S_INFO["sh"]), orig.get_height() * S_INFO["sh"]))
+            else:
+                TEXTURES[name] = orig
         else:
             load_all_textures(i)
 
@@ -43,7 +53,7 @@ for i in sorted(os.listdir(asset_path("audio", "sounds"))):
 for i in sorted(os.listdir(asset_path("fonts"))):
     if (i.endswith(".ttf")):
         a = i.split("_s")
-        FONTS[a[0]] = pygame.font.Font(asset_path("fonts", i), int(a[1].split(".")[0]))
+        FONTS[a[0]] = pygame.font.Font(asset_path("fonts", i), ceil(int(a[1].split(".")[0]) * S_INFO["sh"]))
     
 
 def clamp(v, maxv, minv):
@@ -63,7 +73,7 @@ def flip_list(lst: list):
 class ScaledSprite(pygame.sprite.Sprite):
     def __init__(self, *sprites : pygame.Surface):
         super().__init__()
-        self.sprites = [(pygame.transform.scale(s, (s.get_width() / SCREEN_RES, s.get_height() / SCREEN_RES))) for s in sprites]
+        self.sprites = [(pygame.transform.scale(s, (s.get_width() / 1920, s.get_height() / 1080))) for s in sprites]
         self.image = self.sprites[0]
 
 class Fader(pygame.sprite.Sprite):
@@ -71,7 +81,7 @@ class Fader(pygame.sprite.Sprite):
         super().__init__()
         self.image : pygame.Surface = TEXTURES["pixel.png"]
         self.image.fill((0, 0, 0))
-        self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.image = pygame.transform.scale(self.image, (S_INFO["w"], S_INFO["h"]))
         self.rect = self.image.get_rect(topleft = (0, 0))
         self.timer = 0
         self.total = 0
@@ -103,7 +113,7 @@ class ParallaxBG(pygame.sprite.Sprite):
         self.scrollx = 0
     
     def draw(self):
-        for i in range(0, ceil(SCREEN_WIDTH / self.width) + 1):
+        for i in range(0, ceil(S_INFO["w"] / self.width) + 1):
             self.rect.x = i * self.width + self.scrollx
             SCREEN.blit(self.image, self.rect)
         if not game.paused: self.scrollx -= 3
@@ -164,7 +174,7 @@ class RotatingSprite(pygame.sprite.Sprite):
         if (not game.paused):
             self.change_image()
             self.change_rect()
-            self.angle += self.dir * self.speed * (1 if not hasattr(self, "mul") else self.mul)
+            self.angle += self.dir * self.speed * (1 if not hasattr(self, "mul") else self.mul) * (S_INFO["r"] * 3 / 4)
     
     def animate(self):
         if (not game.paused):
@@ -212,30 +222,32 @@ class Game():
     
     def run(self):
         bg = ParallaxBG(TEXTURES["title\\bg.png"])
-        planet = pygame.transform.scale(TEXTURES["red_planet.png"], (300, 300))
+        planet = pygame.transform.scale(TEXTURES["red_planet.png"], (300  * S_INFO["sh"], 300 * S_INFO["sh"]))
         planet_cache = [(pygame.transform.rotate(planet, a)) for a in range (0, 360, 2)]
-        title = ScaledSprite(TEXTURES["title\\title.png"])
-        title2 = ScaledSprite(TEXTURES["title\\title2.png"])
-        astronaut = ScaledSprite(pygame.transform.scale(TEXTURES["player0.png"], (145, 333)))
+        title = TEXTURES["title\\title.png"]
+        title2 = TEXTURES["title\\title2.png"]
+        astronaut = pygame.transform.scale(TEXTURES["player0.png"], (145 * S_INFO["sw"], 333 * S_INFO["sh"]))
         angle = 0
 
         self.fader.start(3)
         SOUNDS["main_menu.wav"].play(loops=-1, fade_ms = 3000)
         while self.running:
+            update_screen_info()
+            
             bg.draw()
             if self.is_playing:
                 if self.player.game_over:
                     max_score = FONTS["Cave-Story"].render(f"Highest score: {self.max_score}", False, (255, 0, 0))
-                    SCREEN.blit(max_score, (SCREEN_CENTERX - max_score.get_width() / 2, SCREEN_CENTERY - max_score.get_height() / 2 + 100))
+                    SCREEN.blit(max_score, (S_INFO["cx"] - max_score.get_width() / 2, S_INFO["cy"] - max_score.get_height() / 2 + 100 * S_INFO["sh"]))
                 self.player.update_player()
                 score = FONTS["Cave-Story"].render(f"Score: {self.score}", False, (255, 0, 0))
-                SCREEN.blit(score, (SCREEN_CENTERX - score.get_width() / 2, SCREEN_CENTERY - score.get_height() / 2 - 100 if self.player.game_over else 20))
+                SCREEN.blit(score, (S_INFO["cx"] - score.get_width() / 2, S_INFO["cy"] - score.get_height() / 2 - 100 * S_INFO["sh"] if self.player.game_over else 20))
                 for i in range (1, 4):
                     tex = TEXTURES["empty_h.png"]
-                    SCREEN.blit(tex, (SCREEN_WIDTH - tex.get_width()*i - 3*i, 18))
+                    SCREEN.blit(tex, (S_INFO["w"] - tex.get_width()*i - 3*i, 18))
                 for i in range (1, self.player.lives+1):
                     tex = TEXTURES["heart.png"]
-                    SCREEN.blit(tex, (SCREEN_WIDTH - tex.get_width()*i - 3*i, 18))
+                    SCREEN.blit(tex, (S_INFO["w"] - tex.get_width()*i - 3*i, 18))
                 if self.fader.has_ended:
                     if self.paused and self.fader.image.get_alpha() != 127:
                         self.fader.image.set_alpha(127)
@@ -247,10 +259,10 @@ class Game():
                     data.write(str(self.max_score))
                     data.close()
             else:
-                SCREEN.blit(astronaut.image, (104, 450 + 10 * sin(3 + angle / 20)))
-                SCREEN.blit(planet_cache[round(angle / 2) % len(planet_cache)], planet_cache[round(angle / 2) % len(planet_cache)].get_rect(center = planet.get_rect(topleft = (810, 470)).center))
-                SCREEN.blit(title.image, (SCREEN_CENTERX - title.image.get_width() / 2, 230 - title.image.get_height() / 2 + 10 * sin(angle / 20)))
-                SCREEN.blit(title2.image, (SCREEN_CENTERX - title2.image.get_width() / 2, SCREEN_HEIGHT - 100 - title2.image.get_height() / 2 + 5 * sin(1.5 + angle / 20)))
+                SCREEN.blit(astronaut, (104 * (S_INFO["w"] / 1200), (450 + 10 * sin(3 + angle / 20)) * S_INFO["sh"]))
+                SCREEN.blit(planet_cache[round(angle / 2) % len(planet_cache)], planet_cache[round(angle / 2) % len(planet_cache)].get_rect(center = planet.get_rect(topleft = (810 * S_INFO["sw"], 470 * S_INFO["sh"])).center))
+                SCREEN.blit(title, (S_INFO["cx"] - title.get_width() / 2, 230 - title.get_height() / 2 + 10 * sin(angle / 20)))
+                SCREEN.blit(title2, (S_INFO["cx"] - title2.get_width() / 2, S_INFO["h"] - 100 - title2.get_height() / 2 + 5 * sin(1.5 + angle / 20)))
                 angle += 2
     
             if (self.fader.fading == False and self.fader.has_ended() and not self.is_playing):

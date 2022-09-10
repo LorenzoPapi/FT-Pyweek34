@@ -27,10 +27,10 @@ class Planet(RotatingSprite):
             dir = 1 if random() < 0.5 else -1
             enemy = DoubleSinSprite(
                 image, self.flying_enemies[enemy_index + 1],
-                start_pos = (700, 300),
+                start_pos = (700 * S_INFO["sw"], 300 * S_INFO["sh"]),
                 dir = dir,
                 angle = dir * radians(90),
-                origin = (SCREEN_CENTERX, self.rect.top + image.get_height() - randint(20, 50)),
+                origin = (S_INFO["cx"], self.rect.top + image.get_height() - randint(20, 50)),
                 speed = -0.04,
             )
             enemy.maxhp = enemy.hp = 5
@@ -57,7 +57,7 @@ class Planet(RotatingSprite):
             speed = 5
         )
         self.radius = self.image.get_width() / 2
-        self.origin = (SCREEN_CENTERX, SCREEN_HEIGHT + self.radius / 2 - 50)
+        self.origin = (S_INFO["cx"], S_INFO["h"] + self.radius / 2 - 50)
         self.rect = self.image.get_rect(center=self.origin)
         self.enemies = []
         self.enemyf = 30
