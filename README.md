@@ -3,6 +3,9 @@ The well-known space company SFAC (Super Famous Astronauts Corporation) found an
 
 After various missions and studies about the invaders, it has been discovered that they're only vulnerable to... ketchup itself. They've sent you there to kill as many aliens as you can, prove yourself to be worthy.
 
+## How to run the game?
+The game has been tested for Linux and Windows, works fine on both systems. To start the game simply run the "run_game.py" file. If the game doesn't start and the error looks like "cannot find file ./assets/textures", it means that the working directory is not the game directory. Else, open an issue [here](https://github.com/LorenzoPapi/FT-Pyweek34/issues) stating the error.
+
 ## Commands
 - Press X to shoot;
 - Press LEFT ARROW and RIGHT ARROW to move;
@@ -15,7 +18,7 @@ Walking enemies will give you 10 points, flying enemies will give you 20 points.
 The game was built with python 3.8.10 and pygame 2.1.2.
 
 ## Credits
-Many sprites and sounds were found through the pygame resources, full credits listed [here](/credits.txt).
+Many sprites and sounds were found through the pyweek resources, full credits listed [here](/credits.txt).
 
 ## Thoughts
 It was our first pyweek, our first encounter with pygame and our first time working together on something. We obviously don't expect to win, but we had fun nonetheless. Hope you'll have fun playing too!
