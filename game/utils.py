@@ -291,5 +291,10 @@ class Game():
                 elif self.fader.has_ended() and event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                     self.fader.start(3, False)
                     SOUNDS["main_menu.wav"].fadeout(3000)
-
+                    #lore1 = FONTS["Cave-Story"].render("The well-known space company \nSFAC found an anomaly in Andromeda Galaxy:", False, (255, 0, 0))
+                    #lore2 = FONTS["Cave-Story"].render(" a massive quantity of food invaded an unknown red planet… ", False, (255, 0, 0))
+                    #lore3 = FONTS["Cave-Story"].render("SFAC  immediately sent an expedition, but what they saw after is almost unbelievable… ", False, (255, 0, 0))
+                    #SCREEN.blit(lore1, (0,0))
+                    #SCREEN.blit(lore2, (0,300))
+                    #SCREEN.blit(lore3, (0,600))
 game = Game()
