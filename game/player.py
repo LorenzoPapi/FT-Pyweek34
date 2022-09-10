@@ -68,6 +68,7 @@ class Player(RotatingSprite):
                             enemy.hp -= 1
                             self.bullets.remove(bullet)
                     if pygame.sprite.collide_rect(enemy, self):
+                        SOUNDS["hit.mp3"].play()
                         self.lives -= 1
                         self.planet.enemies.remove(enemy)
                         if self.lives == 0:

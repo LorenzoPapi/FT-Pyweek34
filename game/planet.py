@@ -61,6 +61,7 @@ class Planet(RotatingSprite):
         self.rect = self.image.get_rect(center=self.origin)
         self.enemies = []
         self.enemyf = 30
+        self.killed = 0
 
     def update(self):
         rotated = pygame.transform.scale2x(self.cache[round(self.angle / self.speed) % len(self.cache)])
@@ -71,10 +72,13 @@ class Planet(RotatingSprite):
         
         for enemy in self.enemies:
             if enemy.hp <= 0:
-                SOUNDS["score_up.mp3"].play()
+                self.killed += 1
                 game.score += 20 if enemy.maxhp == 5 else 10
-                if game.player.lives < 3 and game.score % 150 == 0:
+                if game.player.lives < 3 and self.killed % 15 == 0:
+                    SOUNDS["life_up.wav"].play()
                     game.player.lives += 1
+                else:
+                    SOUNDS["score_up.mp3"].play()
                 self.enemies.remove(enemy)
             else:
                 if game.player.moving and enemy.maxhp != 5 and not is_outside_surface(SCREEN, enemy.rect.topleft):
