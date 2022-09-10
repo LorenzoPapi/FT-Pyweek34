@@ -71,6 +71,7 @@ class Player(RotatingSprite):
                         SOUNDS["hit.mp3"].play()
                         self.lives -= 1
                         self.planet.enemies.remove(enemy)
+                        self.planet.killed = 0
                         if self.lives == 0:
                             enemy.hp = 0
                             self.game_over = True

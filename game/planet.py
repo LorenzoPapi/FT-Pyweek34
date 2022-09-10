@@ -35,7 +35,7 @@ class Planet(RotatingSprite):
             )
             enemy.maxhp = enemy.hp = 5
         self.enemies.append(enemy)
-        self.enemyf = randint(ceil(60 - game.score / 15) - 1, 120)
+        self.enemyf = randint(max(20, ceil(60 - game.score / 15) - 1), 120)
 
 
     def move_planet(self, pressed):

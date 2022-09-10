@@ -3,14 +3,18 @@ from math import ceil, cos, degrees, pi, radians, sin
 from random import randint, random
 
 import pygame
-from pygame.locals import DOUBLEBUF, RESIZABLE
+from pygame.locals import DOUBLEBUF
 
 pygame.init()
 S_INFO = {}
+
+def clamp(v, maxv, minv):
+    return min(max(v, minv), maxv)
+
 def update_screen_info():
     info = pygame.display.Info()
-    S_INFO["h"] = min(1024, info.current_h)
-    S_INFO["w"] = min(1200, info.current_w)
+    S_INFO["w"] = clamp(info.current_w, 1280, 640)
+    S_INFO["h"] = clamp(info.current_h, 960, 480)
     S_INFO["r"] = S_INFO["w"] / S_INFO["h"]
     S_INFO["c"] = (S_INFO["w"] / 2, S_INFO["h"] / 2); 
     S_INFO["cx"] = S_INFO["c"][0]; S_INFO["cy"] = S_INFO["c"][1]
@@ -54,10 +58,6 @@ for i in sorted(os.listdir(asset_path("fonts"))):
     if (i.endswith(".ttf")):
         a = i.split("_s")
         FONTS[a[0]] = pygame.font.Font(asset_path("fonts", i), ceil(int(a[1].split(".")[0]) * S_INFO["sh"]))
-    
-
-def clamp(v, maxv, minv):
-    return min(max(v, minv), maxv)
 
 def is_outside_surface(surf: pygame.Surface, point):
     h, w = surf.get_height(), surf.get_width()
