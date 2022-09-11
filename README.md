@@ -9,7 +9,8 @@ The game has been tested for Linux and Windows, works fine on both systems. To s
 ## Commands
 - Press X to shoot;
 - Press LEFT ARROW and RIGHT ARROW to move;
-- Press Space to jump, the more you press the higher you'll jump.
+- Press Space to jump, the more you press the higher you'll jump;
+- Press P to pause the game.
 
 ## Score sytem
 Walking enemies will give you 10 points, flying enemies will give you 20 points. Every 15 enemies killed, you'll gain a life for a maximum of 3. If you lose a life, the kill counter will be resetted. If you lose all lives, you're dead.
